@@ -1,5 +1,5 @@
-require 'sinatra/base'
-require_relative 'prime_sum'
+require "sinatra/base"
+require_relative "prime_sum"
 
 class Api < Sinatra::Base
   get "/?:count?" do

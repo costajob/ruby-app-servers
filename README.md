@@ -67,7 +67,11 @@ I found *Unicorn* a bit disappointing, at least in standalone mode.
 *Passenger* and *Thin* provide commands to start and stop the server.
 
 ### Parallelism
-The fact that *Puma* is so performant (also with GIL) demonstrate that Ruby therads offer good performance gain on non-CPU bound tasks. 
-Also the HTTP parser from *Mongrel* confirms to be rock-solid after all these years (thanks [Zed](http://zedshaw.com/)).
+The fact that *Puma* is so performant on MRI surprises me, and also demonstrates Ruby threads are useful with GIL too.
+The *Mongrel* HTTP parser also confirms to be rock-solid (thanks [Zed](http://zedshaw.com/)).
 True parallelism in MRI is currently possible with multi-process programming: copy-on-write offer (finally) performance on par with Python and PHP best solutions.
-In real world topics such as as *code optimization* and *organization* are far more important than concurrency paradigms: removing the cache esponentially descrese throughput (try to keep state in pure functional languages and you know what i mean).
+
+### Real World
+In real world topics such as as *code optimization* and *organization* are far more important than concurrency paradigms.
+Removing the cache and augmenting the number of primes number to compute esponentially descrese throughput.
+In this sense an expressive language allows to keep codebase more extensible: try to keep state in pure functional languages and you know what i mean.

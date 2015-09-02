@@ -1,4 +1,4 @@
-require 'prime'
+require "prime"
 
 class PrimeSum
   def self.cache
