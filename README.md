@@ -52,26 +52,26 @@ bundle exec thin start -C config/thin.yml
 ## Final (personal) Thoughts
 
 ### Speed
-*Puma* seem the clear winner here, also when not used with native-threads Ruby implementation.
-Both *Thin* and *Passenger* offers similar results: reactive VS CSP paradigms ends on par here.
+*Puma* is the clear winner, although limited by GIL.
+Both *Thin* and *Passenger* offers similar performance: reactive VS CSP paradigms ends on par here.
 I found *Unicorn* a bit disappointing, at least in standalone mode.
 
 ### Consistency
 *Puma* wins again: no errors and timeout are produced by the load tool.
 
 ### Dependencies
-*Puma* is packaged as a *single gem*: i really like it since it allows to keep the external dependencies footprint very small compared to the aother contendants.
+*Puma* is packaged as a *single gem*, allowing to reduce the external dependencies footprint.
 
 ### Configuration
 *Passenger* default configuration takes care of spawning more processes when needed. Integration with both Nginx and Apache is a breeze.
 *Passenger* and *Thin* provide commands to start and stop the server.
 
 ### Parallelism
-The fact that *Puma* is so performant on MRI surprises me, and also demonstrates Ruby threads are useful with GIL too.
+The fact that *Puma* is so performant on MRI surprises me, and give some credit to the use of Ruby threads with the GIL too.
 The *Mongrel* HTTP parser also confirms to be rock-solid (thanks [Zed](http://zedshaw.com/)).
-True parallelism in MRI is currently possible with multi-process programming: copy-on-write offer (finally) performance on par with Python and PHP best solutions.
+Parallelism in MRI is possible with multi-process programming: copy-on-write offer (finally) performance on par with Python and PHP best solutions.
 
 ### Real World
 In real world topics such as as *code optimization* and *organization* are far more important than concurrency paradigms.
 Removing the cache and augmenting the number of primes number to compute esponentially descrese throughput.
-In this sense an expressive language allows to keep codebase more extensible: try to keep state in pure functional languages and you know what i mean.
+In this regard an expressive language allows to keep codebase more extensible: try to keep state in pure functional languages and you know what i mean.
