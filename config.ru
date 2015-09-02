@@ -1,5 +1,5 @@
 require "rubygems"
 require "sinatra"
-require File.expand_path "../hello_primes.rb", __FILE__
+require_relative "lib/api"
 
-run HelloPrimes::App
+run Api
