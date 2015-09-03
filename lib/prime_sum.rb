@@ -9,11 +9,16 @@ class PrimeSum
     @count = count.to_i
   end
 
-  def compute
+  def compute(cache: false)
+    return sum unless cache
     self.class.cache.fetch(@count) do
-      Prime.take(@count).reduce(&:+).tap do |sum|
+      sum.tap do |sum|
         self.class.cache[@count] = sum
       end
     end
+  end
+
+  private def sum
+    Prime.take(@count).reduce(&:+)
   end
 end

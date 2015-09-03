@@ -14,6 +14,6 @@ describe PrimeSum do
 
   it 'must cache the result' do
     s = PrimeSum.new(count: 100)
-    s.compute.must_equal PrimeSum.cache.fetch(100)
+    s.compute(cache: true).must_equal PrimeSum.cache.fetch(100)
   end
 end
