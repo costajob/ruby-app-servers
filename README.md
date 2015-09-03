@@ -41,30 +41,46 @@ bundle exec passenger start -d
 bundle exec thin start -C config/thin.yml
 ```
 
-## Comparative results
-| App server     | Throughput (req/s) | Latency (ms) | Timeout (n/tot.req) |
+## Comparative Numbers
+These are the benchmarking results of computing the sum of the first 10K primes numbers with the internal **cache enabled**:
+
+| App server     | Throughput (req/s) | Latency (ms) | Req. Errors (n/tot) |
 | :------------- | -----------------: | -----------: | ------------------: |
-| Puma           |           2276.13  |       16.65  |            0/68518  |
-| Thin           |           1446.84  |      345.52  |           63/43553  |
-| Passenger      |           1298.28  |      344.48  |          237/33637  |
-| Unicorn        |            327.58  |      480.10  |           403/9861  |
+| Puma           |           1885.25  |       25.39  |            0/56742  |
+| Thin           |           1201.68  |      408.77  |          108/36149  |
+| Passenger      |           1359.30  |      306.02  |         3809/40912  |
+| Unicorn        |            280.25  |      580.48  |           511/8435  |
+
+Here are the same numbers but with internal **cache disabled**:
+
+| App server     | Throughput (req/s) | Latency (ms) | Req. Errors (n/tot) |
+| :------------- | -----------------: | -----------: | ------------------: |
+| Puma           |            440.13  |      108.74  |            0/13207  |
+| Thin           |            162.58  |     1240.12  |          3971/4882  |
+| Passenger      |           1450.30  |      289.95  |        37517/43644  |
+| Unicorn        |            105.57  |      894.73  |           739/3178  |
 
 ## Final (personal) Thoughts
 
 ### Speed
-*Puma* is the clear winner, although limited by GIL.
-Both *Thin* and *Passenger* offers similar performance: reactive VS CSP paradigms ends on par here.
-I found *Unicorn* a bit disappointing, at least in standalone mode.
+*Puma* is the clear winner, proving to be fast and reliable.
+Both *Thin* and *Passenger* offer similar performance, demonstrating both reactive and CSP paradigms are valid alternatives.
+I found *Unicorn* a bit disappointing, maybe its CSP implementation suffers the VM environment.
 
 ### Consistency
-*Puma* wins again: no errors and timeout are produced by the load tool.
+*Puma* wins again: no errors are produced on both cached and uncached scenarios.
+*Unicorn* is far slower, but pretty consistent on managing intensive computation.
+*Thin* and *Passenger* reject many requests, the latter very quickly.
 
 ### Dependencies
 *Puma* is packaged as a *single gem*, allowing to reduce the external dependencies footprint.
+*Thin* is the havier of the bucket, depending on the *EventMachine* gem.
 
 ### Configuration
 *Passenger* default configuration takes care of spawning more processes when needed. Integration with both Nginx and Apache is a breeze.
 *Passenger* and *Thin* provide commands to start and stop the server.
+*Puma* and *Unicorn* configurations are more hard-coded, but the former allows all of
+the options to be specified on the CLI.
 
 ### Parallelism
 The fact that *Puma* is so performant on MRI surprises me, and give some credit to the use of Ruby threads with the GIL too.
@@ -74,4 +90,4 @@ Parallelism in MRI is possible with multi-process programming: copy-on-write off
 ### Real World
 In real world topics such as as *code optimization* and *organization* are far more important than concurrency paradigms.
 Removing the cache and augmenting the number of primes number to compute esponentially descrese throughput.
-In this regard an expressive language allows to keep codebase more extensible: try to keep state in pure functional languages and you know what i mean.
+In this regard Ruby proves to be expressive and extensible, a severe tradeoff to consider when opting for stateless, highly concurrent functional languages.
