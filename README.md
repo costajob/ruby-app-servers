@@ -1,10 +1,9 @@
-The scope of this comparison is to figure out how modern Ruby application servers performs against a simple *Sinatra* Web application.
+The scope of this comparison is to figure out how modern Ruby application servers perform against a barebone *Sinatra* Web application.
 
 ## Application
 The ruby application computes the sum of a range of prime numbers, fetched by the *Prime* standard library.
-To test how the app servers performs versus heavy computation i made the range
-limit configurale via an HTTP parameter.
-I also throwed in a simple cache mechanism to simulate a reverse-proxy solution (also configurable by route).
+To test how the app servers perform versus heavy computation i made the range limit configurale via an HTTP parameter.
+I also throwed in a simple cache mechanism to simulate a reverse-proxy solution (also configurable as an HTTP parameter).
 
 ## Hardware & Tools
 Test are performed by using a single device: 
@@ -78,30 +77,31 @@ bundle exec thin start -C config/thin.yml
 
 ### Speed
 *Puma* is the clear winner, proving to be fast and reliable.
-*Thin* comes closer, proving the reactive pattern is a good alternative.
+*Thin* comes closer, proving reactive pattern is a good option.
 While *Passenger* performance are generally good, i had some reliability issues (read below).
-I found *Unicorn* perfromance disappointing, maybe its CSP implementation suffers the VM environment.
+I found *Unicorn* perfromance disappointing, maybe its CSP implementation suffers the VM environment (since it relies mostly on the underneath OS for balancing).
 
 ### Reliability
 *Puma* wins again: no errors are produced on both cached and uncached scenarios.
 *Thin* is good on cached scenario, less reliable on heavy computations.
 *Passenger* proves to be the less consistent on all scenarios, discarding many
-requests as non-2xx/3xx.
+requests as non-2xx/3xx (about 85% of total requests are rejected on non-cached scenario, it seems the queue limit has ben reached, but unfortnately it gives no clue on how augmenting it).
 *Unicorn* is the slowest again, but pretty consistent managing non-cached scenario.
 
 ### Dependencies
 All of the application servers depend on the *rack* gem.
 That said *Puma* and *Passenger* have no other runtime dependencies, thus reducing dependencies footprint.
-*Unicorn* has two runtime dependencies to work out.
-*Thin* is the havier of the bucket, depending on the *EventMachine* gem.
+Both *Unicorn* and *Thin* have other two runtime dependencies, the latter using the *EventMachine* gem to implement the reactive pattern.
 
 ### Configuration
-*Passenger* default configuration takes care of spawning more processes when needed. Integration with both Nginx and Apache is a breeze.
-Both *Passenger* and *Thin* provide commands to start and stop the server.
-Both *Puma* and *Unicorn* are pretty easy to configure, the former allow to specify all of the options on the CLI.
+*Passenger* could run in production without any particular changes. Integration with both Nginx and Apache is a breeze.
+Both *Passenger* and *Thin* provide commands to start and stop the server, while
+*Puma* relies on a separate bin (*pumactl*).
+*Unicorn* configuration is the more *hardcore* of the bucket, but allows low level
+interaction with the application.
 
 ### Concurrency and Parallelism
 The fact that *Puma* is so performant on MRI surprises me, and give some credit to the use of Ruby threads with the GIL too.
 The *Mongrel* HTTP parser also confirms to be rock-solid (thanks [Zed](http://zedshaw.com/)).
-By supporting *CoW* Ruby application server performance is finally on par with *Python* and *PHP* best solutions.
-*Ruby 3.0* will be aimed to offer a better concurrency model, although i found current options fit my needs pretty well.
+By supporting [CoW](https://en.wikipedia.org/wiki/Copy-on-write) Ruby application servers performance is finally on par with *Python* and *PHP* best solutions.
+*Ruby 3.0* will be aimed to offer a better concurrency model, by introducing a more abstarct solution (e.g. actors), or by using [pipeline parallelism](https://en.wikipedia.org/wiki/Pipeline_(computing)). These are good news, although i found current options fit my needs pretty well.
