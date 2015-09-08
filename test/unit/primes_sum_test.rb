@@ -1,6 +1,19 @@
 require "test_helper"
 require_relative  "../../lib/prime_sum"
 
+describe Cache do
+  let(:cache) { Cache::new }
+
+  it 'must return nil if no value is cached and no block is passed' do
+    cache.fetch(:passwd).must_be_nil
+  end
+
+  it 'must store the result into cache' do
+    cache.fetch(:passwd) { "s3cr37" }
+    cache.fetch(:passwd).must_equal "s3cr37"
+  end
+end
+
 describe PrimeSum do
   it 'must initialize count as an integer' do
     s = PrimeSum.new(count: "1000")

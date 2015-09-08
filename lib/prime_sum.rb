@@ -1,8 +1,19 @@
 require "prime"
 
+class Cache
+  def initialize; @storage = {}; end
+
+  def fetch(key)
+    @storage.fetch(key) do
+      return nil unless block_given?
+      yield.tap { |res| @storage[key] = res }
+    end
+  end
+end
+
 class PrimeSum
   def self.cache
-    @cache ||= {}
+    @cache ||= Cache::new
   end
 
   def initialize(count: 10)
@@ -11,11 +22,7 @@ class PrimeSum
 
   def compute(cache: false)
     return sum unless cache
-    self.class.cache.fetch(@count) do
-      sum.tap do |sum|
-        self.class.cache[@count] = sum
-      end
-    end
+    self.class.cache.fetch(@count) { sum }
   end
 
   private def sum
