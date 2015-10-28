@@ -1,5 +1,5 @@
 require "test_helper"
-require_relative  "../../lib/prime_sum"
+require_relative  "../lib/prime_sum"
 
 describe Cache do
   let(:cache) { Cache::new }
