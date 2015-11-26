@@ -1,5 +1,5 @@
-require "test_helper"
-require_relative  "../lib/prime_sum"
+require 'test_helper'
+require 'prime_sum'
 
 describe Cache do
   let(:cache) { Cache::new }
@@ -9,14 +9,14 @@ describe Cache do
   end
 
   it 'must store the result into cache' do
-    cache.fetch(:passwd) { "s3cr37" }
-    cache.fetch(:passwd).must_equal "s3cr37"
+    cache.fetch(:passwd) { 's3cr37' }
+    cache.fetch(:passwd).must_equal 's3cr37'
   end
 end
 
 describe PrimeSum do
   it 'must initialize count as an integer' do
-    s = PrimeSum.new(count: "1000")
+    s = PrimeSum.new(count: '1000')
     s.instance_variable_get(:@count).must_equal 1000 
   end
 

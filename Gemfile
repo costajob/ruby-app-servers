@@ -2,6 +2,7 @@
 source 'https://rubygems.org'
 
 gem 'sinatra'
+gem 'roda'
 gem 'puma'
 gem 'passenger'
 gem 'thin'

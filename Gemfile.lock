@@ -16,6 +16,8 @@ GEM
       rack
     raindrops (0.15.0)
     rake (10.4.2)
+    roda (2.8.0)
+      rack
     sinatra (1.4.6)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -38,6 +40,7 @@ DEPENDENCIES
   minitest
   passenger
   puma
+  roda
   sinatra
   thin
   unicorn
