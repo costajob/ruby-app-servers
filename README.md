@@ -2,13 +2,13 @@
 * [Scope](#scope)
 * [Application](#application)
 * [Hardware and Tools](#hardware-and-tools)
-  * [Client/Server Isolation](#client-server-isolation)
+  * [Client Server Isolation](#client-server-isolation)
   * [Load Tool](#load-tool)
 * [Tested Application Servers](#tested-application-servers)
   * [Puma 2](#puma-2)
-  * [Unicorn 4.9](#unicorn-49)
-  * [Passenger 5](#passenger-5)
   * [Thin 1.6](#thin-16)
+  * [Passenger 5](#passenger-5)
+  * [Unicorn 4.9](#unicorn-49)
 * [Tested Ruby Frameworks](#tested-ruby-frameworks)
   * [Sinatra 1.4](#sinatra-14)
   * [Roda 2.8](#roda-28)
@@ -37,7 +37,7 @@ Test are performed by using a single device:
 * 2,2 GHz Intel Core i7 4CPU
 * 8 GB 1333 MHz DDR3
 
-### Client/Server Isolation
+### Client Server Isolation
 I order to simulate the host/client isolation i used a [Vagrant](https://www.vagrantup.com/) box with the following specs:
 * RAM: 6GB
 * vCPU: 3
