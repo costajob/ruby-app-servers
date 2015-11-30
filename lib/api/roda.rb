@@ -6,7 +6,7 @@ module Api
     route do |r|
       r.get ':count' do |count|
         sum = PrimeSum.new(count: count).compute(cache: r['cache'])
-        "The sum of the first #{count} prime numbers is: #{sum}"
+        "The sum of numbers is: #{sum}"
       end
     end
   end
