@@ -16,6 +16,7 @@
   * [Reliability](#reliability)
   * [Dependencies](#dependencies)
   * [Configuration](#configuration)
+  * [Threads vs processes vs reactor](#threads-vs-processes-vs-reactor)
   * [The future](#the-future)
 
 ## Scope
@@ -26,7 +27,8 @@ The Ruby application computes the sum of a range of prime numbers, fetched by th
 To test how the application servers perform versus heavy computation i made the range limit configurable via an HTTP parameter.
 
 ### Ruby
-Ruby 2.3 version was used.
+Ruby 2.3 version was used to test all the application servers.  
+I also added JRuby 9.1.2.0 to test the Puma application server, to see how the threads-pool model compares against the pre-forking one.
 
 ### Platform
 I registered these benchmarks with a MacBook PRO 15 late 2011 having these specs:
@@ -59,6 +61,7 @@ The original idea from Mongrel HTTP Parser was extended to make use of Ruby nati
 #### Bootstrap:
 ```
 bundle exec puma -w 8 --preload -t 16:32
+jruby -S bundle exec puma -t 32:64
 ```
 
 ### Thin
@@ -102,6 +105,7 @@ Here are the benchmarks results ordered by increasing throughput.
 | Thin           |           4360.51  |             22.91/3.85/69.28  |
 | Passenger      |           8459.28  |             11.81/1.61/29.17  |
 | Puma           |          24260.92  |             5.15/8.25/183.90  |
+| Puma (JRuby)   |          26389.50  |             3.53/8.41/207.55  |
 
 ### First 10.000 numbers
 | App server     | Throughput (req/s) | Latency in ms (avg/stdev/max) |
@@ -110,6 +114,7 @@ Here are the benchmarks results ordered by increasing throughput.
 | Unicorn        |            547.12  |          151.51/57.71/771.61  |
 | Passenger      |            834.41  |           119.54/7.46/185.41  |
 | Puma           |            845.05  |         134.61/116.24/913.47  |
+| Puma (JRuby)   |            946.52  |          94.22/126.81/847.11  |
 
 ## Considerations
 
@@ -132,6 +137,11 @@ Unicorn and Thin depends on other two gems, in particular Thin is coupled with t
 Passenger could run in production without any particular changes. Integration with both Nginx and Apache is a breeze thanks to the wizard installation.    
 Passenger and Thin provide commands to start and stop the server, while Puma relies on a separate bin (pumactl).  
 Unicorn configuration is the more *hardcore* of the bucket, but allows low level interaction with the application.
+
+### Threads vs processes vs reactor
+I was able to squeeze some throughtput from Puma by using JRuby and its threads-pool model.   
+Said that the performance gap of the pre-forking model is not so large on my workstation and JVM consumes much more memory than MRI processes.
+Reactor pattern has proven to not perform nicely on Ruby compared with faster languages, for example [Node.js](https://nodejs.org/en/).
 
 ### The future
 By supporting [CoW](https://en.wikipedia.org/wiki/Copy-on-write) Ruby application servers based the pre-forking model have finally pretty decent performance.  
