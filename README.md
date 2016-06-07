@@ -24,11 +24,11 @@ The scope of this comparison is to figure out how modern Ruby application server
 
 ### Primes
 The Ruby application computes the sum of a range of prime numbers, fetched by the *Prime* standard library.  
-To test how the application servers perform versus heavy computation i made the range limit configurable via an HTTP parameter.
+The range of the first prime numbers to compute is configurable via an HTTP parameter to stretch computational time.  
 
 ### Ruby
-Ruby 2.3 version was used to test all the application servers.  
-I also added JRuby 9.1.2.0 to test the Puma application server, to see how the threads-pool model compares against the pre-forking one.
+Ruby 2.3 version is used for all of the tests.    
+JRuby 9.1.2.0 is used to test the Puma application server in order to compare the threads-pool model versus the pre-forking one.
 
 ### Platform
 I registered these benchmarks with a MacBook PRO 15 late 2011 having these specs:
@@ -46,17 +46,18 @@ The following script commands were used:
 wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/10
 ```
 
-#### Firt 10.000 numbers
+#### First 10.000 numbers
 ```
 wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/10000
 ```
 
 ## Tested Application Servers
-I tested against the following application servers in standalone configuration:
+The following application servers are tested:
 
 ### Puma
 [Puma](http://puma.io/) is a concurrent application server crafted by Evan Phoenix.  
-The original idea from Mongrel HTTP Parser was extended to make use of Ruby native threads to get a fast and really concurrent (on non-GIL Ruby implementations) application server. Puma relies on the pre-forking model to grant parallelism on MRI.
+The original idea from Mongrel HTTP Parser was extended to make it compatible with Rack-era.  
+Puma offers the threads-pool and the pre-forking models to grant parallelism on both MRI and JRuby.
 
 #### Bootstrap:
 ```
@@ -66,7 +67,7 @@ jruby -S bundle exec puma -t 32:64
 
 ### Thin
 [Thin](http://code.macournoyer.com/thin/) is a piece of software by Marc-André Cournoyer.  
-Thin is the only application server that use the reactor-pattern to serve HTTP requests, being based on the Ruby [Eventmachine](https://github.com/eventmachine/eventmachine) library.
+Thin is the only application server that uses the [reactor-pattern](https://en.wikipedia.org/wiki/Reactor_pattern) to serve HTTP requests, being based on the Ruby [Eventmachine](https://github.com/eventmachine/eventmachine) library.
 
 #### Bootstrap:
 ```
@@ -75,7 +76,8 @@ bundle exec thin start -C config/thin.yml
 
 ### Passenger
 [Phusion Passenger](https://www.phusionpassenger.com/) is the only Ruby application server existing as a commercial solution (Enterprise version).  
-Passenger is aimed to easy configuration and integration. Version 5 has been rewritten with performance as a key feature. Passenger supports both the pre-forking and request-pre-thread models, the latter is only available for the commercial version (not tested). 
+Passenger is aimed to easy configuration and integration. Version 5 has been rewritten with performance as a key feature by including a built in request caching (disabled on tests). 
+Passenger supports both the pre-forking and threads-pool models, the latter is only available for the commercial version (not tested). 
 
 #### Bootstrap:
 ```
@@ -91,9 +93,8 @@ bundle exec unicorn -c config/unicorn.rb -D
 ```
 
 ## Roda
-I run the tests by using [Roda](http://roda.jeremyevans.net/).  
+The application uses [Roda](http://roda.jeremyevans.net/) to expose its API over HTTP.  
 Roda is a Ruby routing framework that is aimed to simplicity, reliability, extensibility and speed.  
-It is based on the concept of a routing tree, allowing for a complete control over the request object at any point in the code.
 
 ## Benchmarks
 Here are the benchmarks results ordered by increasing throughput.
@@ -119,8 +120,8 @@ Here are the benchmarks results ordered by increasing throughput.
 ## Considerations
 
 ### Speed
-Puma outperforms other servers by a large measure: adopting both pre-forking and thread-per-request models is a win-win.  
-Passenger was simply not able to perform on par with Puma for light computational requests, but is on the same boat for heavy-computational ones.  
+Puma outperforms other servers by a large measure: adopting both pre-forking and threads-pool models proved to be a win-win.  
+Passenger was simply not able to perform on par with Puma for light computational requests, but is on the same league for heavy-computational ones.  
 Unicorn delivers the same performance for both light and heavy computational requests: the performance are not stellar, but quite consistent, making it a good option for deploying heavyweight (Rails) applications.  
 Thin reactor-model performance are far away from Puma for both light and heavy computational requests.  
 
@@ -129,20 +130,20 @@ All the Web servers proved to be pretty reliable, but for Thin, that crashed onc
 Passenger has the best latency of the pack.
 
 ### Dependencies
-All of the application servers, but for Unicorn, depends on the *rack* gem.  
+All of the application servers, but for Unicorn, depends on the Rack gem.  
 Puma and Passenger have no other runtime dependencies.  
 Unicorn and Thin depends on other two gems, in particular Thin is coupled with the heavyweight Eventmachine gem.
 
 ### Configuration
 Passenger could run in production without any particular changes. Integration with both Nginx and Apache is a breeze thanks to the wizard installation.    
 Passenger and Thin provide commands to start and stop the server, while Puma relies on a separate bin (pumactl).  
-Unicorn configuration is the more *hardcore* of the bucket, but allows low level interaction with the application.
+Unicorn configuration is the more *hardcore* of the bucket.
 
 ### Threads vs processes vs reactor
-I was able to squeeze some throughtput from Puma by using JRuby and its threads-pool model.   
+I was able to squeeze some throughput from Puma by using JRuby and its threads-pool model.   
 Said that the performance gap of the pre-forking model is not so large on my workstation and JVM consumes much more memory than MRI processes.
 Reactor pattern has proven to not perform nicely on Ruby compared with faster languages, for example [Node.js](https://nodejs.org/en/).
 
 ### The future
 By supporting [CoW](https://en.wikipedia.org/wiki/Copy-on-write) Ruby application servers based the pre-forking model have finally pretty decent performance.  
-*Ruby 3.0* will be aimed to be 3x faster and to offer a better concurrency model: between these two features i will pick the former, since pre-forking has proven to grant parallelism quite nicely.
+*Ruby 3.0* will be aimed to be 3x faster and to offer a better concurrency model: between these two features i will pick the former, parallelism can be obtained by pre-forking in a painless way.
