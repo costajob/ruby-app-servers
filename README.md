@@ -4,7 +4,7 @@
   * [Ruby](#ruby)
   * [Platform](#platform)
   * [Wrk](#wrk)
-* [Tested Application Servers](#tested-application-servers)
+* [Tested servers](#tested-servers)
   * [Puma](#puma)
   * [Thin](#thin)
   * [Passenger](#passenger)
@@ -51,8 +51,8 @@ wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/10
 wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/10000
 ```
 
-## Tested Application Servers
-The following application servers are tested:
+## Tested servers
+The following application servers have been tested:
 
 ### Puma
 [Puma](http://puma.io/) is a concurrent application server crafted by Evan Phoenix.  
