@@ -1,9 +1,0 @@
---- 
-timeout: 60
-wait: 60
-port: 9292
-max_conns: 1024
-max_persistent_conns: 512
-servers: 1
-threaded: true
-daemonize: false

@@ -46,7 +46,8 @@ wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/<first_n_primes_to_s
 ```
 
 ## Tested servers
-The following application servers have been tested:
+I only focused on standalone Ruby servers solutions (no extrenal balancers and/or reverse proxies).  
+The pack includes the following:
 
 ### Puma
 [Puma](http://puma.io/) is a concurrent application server crafted by Evan Phoenix.  
@@ -61,12 +62,12 @@ jruby -S bundle exec puma -t 32:64
 
 ### Thin
 [Thin](http://code.macournoyer.com/thin/) is a piece of software by Marc-André Cournoyer.  
-Thin is the only application server that uses the [reactor-pattern](https://en.wikipedia.org/wiki/Reactor_pattern) to serve HTTP requests, being based on the Ruby [Eventmachine](https://github.com/eventmachine/eventmachine) library.  
-Thin also offers a cluster mode that spawn more workers by using a dedicated socket; unfortunately cluster mode does not include a load balancer (like Unicorn) and sockets run on a separate port. For this reason i only tested Thin single worker mode.
+Thin is the only application server to adopt the [reactor-pattern](https://en.wikipedia.org/wiki/Reactor_pattern) to serve HTTP requests, being based on the Ruby [Eventmachine](https://github.com/eventmachine/eventmachine) gem. It also includes a threads-pool model, but is marked as experimental.  
+Thin offers a cluster mode that spawn more workers by using a dedicated socket; unfortunately Thin clustering relies on an extrenal load balancer, thus being untestable in standalone mode.
 
 #### Bootstrap:
 ```
-bundle exec thin start -C config/thin.yml
+bundle exec thin start -p 9292 --threaded
 ```
 
 ### Passenger
@@ -85,7 +86,7 @@ It has been proved to be a reliable deployment option for large Rails applicatio
 
 #### Bootstrap:
 ```
-bundle exec unicorn -c config/unicorn.rb -D
+bundle exec unicorn -c config/unicorn.rb
 ```
 
 ## Roda
@@ -99,7 +100,7 @@ Here are the benchmarks results ordered by increasing throughput.
 | App server     | Throughput (req/s) | Latency in ms (avg/stdev/max) |
 | :------------- | -----------------: | ----------------------------: |
 | Unicorn        |            549.11  |           33.57/16.64/152.81  |
-| Thin           |           4360.51  |             22.91/3.85/69.28  |
+| Thin           |           4787.93  |             20.87/4.45/77.01  |
 | Passenger      |           8459.28  |             11.81/1.61/29.17  |
 | Puma           |          24260.92  |             5.15/8.25/183.90  |
 | Puma (JRuby)   |          26389.50  |             3.53/8.41/207.55  |
@@ -118,11 +119,11 @@ Here are the benchmarks results ordered by increasing throughput.
 ### Speed
 Puma outperforms other servers by a large measure: adopting both pre-forking and threads-pool models proved to be a win-win.  
 Passenger was simply not able to perform on par with Puma for light computational requests, but is on the same league for heavy-computational ones.  
-Unicorn performance are not stellar, but quite consistent: the throughput remains constant for both light and heavy computational requests.
-Thin reactor-model performance proves to be pretty solid for light computations. On heavy computational requests Thin simply cannot keep the pace of Passenger or Puma (but comparison is unfair here, since it runs on a single process).
+Unicorn performance are not stellar, but quite consistent: the throughput remains constant for both light and heavy computational requests.  
+Thin reactor-model performance proves to be pretty solid for light computations. On heavy computational requests Thin simply cannot keep the pace of Passenger or Puma (but comparison is unfair).
 
 ### Reliability
-All the Web servers proved to be pretty reliable, but for Thin, that crashed once under heavy computational requests loading (understandable since it runs on a single process).  
+All the Web servers proved to be pretty reliable, but for Thin, that crashed once under heavy computational requests loading (again it's understandable since it runs on a single process).  
 Passenger recorded the best latency of the pack for both light and heavy computational requests.
 
 ### Dependencies
@@ -134,7 +135,7 @@ As said Thin also need to be coupled with an external balancer (i.e. Nginx) to s
 ### Configuration
 Passenger could run in production without any particular changes. Integration with both Nginx and Apache is a breeze thanks to the wizard installation.    
 Passenger and Thin provide commands to start and stop the server, while Puma relies on a separate bin (pumactl).  
-Unicorn configuration is the more *hardcore* of the bucket.
+Unicorn configuration is the more *hardcore* of the bucket: it explicitly demands for a configuration file, while the rest of the pack can be configured directly by command line.
 
 ### Threads vs processes vs reactor
 I was able to squeeze some throughput from Puma by using JRuby and its threads-pool model.   

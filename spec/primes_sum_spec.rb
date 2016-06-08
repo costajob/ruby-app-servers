@@ -1,4 +1,4 @@
-require 'test_helper'
+require 'spec_helper'
 require 'prime_sum'
 
 describe Cache do
