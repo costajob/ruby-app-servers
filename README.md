@@ -41,14 +41,8 @@ I used [wrk](https://github.com/wg/wrk) as the loading tool.
 I measured each application server three times, picking the best lap.  
 The following script commands were used:
 
-#### First 10 numbers
 ```
-wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/10
-```
-
-#### First 10.000 numbers
-```
-wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/10000
+wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/<first_n_primes_to_sum>
 ```
 
 ## Tested servers
@@ -67,7 +61,9 @@ jruby -S bundle exec puma -t 32:64
 
 ### Thin
 [Thin](http://code.macournoyer.com/thin/) is a piece of software by Marc-André Cournoyer.  
-Thin is the only application server that uses the [reactor-pattern](https://en.wikipedia.org/wiki/Reactor_pattern) to serve HTTP requests, being based on the Ruby [Eventmachine](https://github.com/eventmachine/eventmachine) library.
+Thin is the only application server that uses the [reactor-pattern](https://en.wikipedia.org/wiki/Reactor_pattern) to serve HTTP requests, being based on the Ruby [Eventmachine](https://github.com/eventmachine/eventmachine) library.  
+Thin also offers a cluster mode that spawn more servers on separate workers, but
+since each processes use a dedicated socket on a different HTTP port it also demands for an external balancer (i.e. Nginx). For this reason i tested Thin with single worker mode only.
 
 #### Bootstrap:
 ```
@@ -76,7 +72,7 @@ bundle exec thin start -C config/thin.yml
 
 ### Passenger
 [Phusion Passenger](https://www.phusionpassenger.com/) is the only Ruby application server existing as a commercial solution (Enterprise version).  
-Passenger is aimed to easy configuration and integration. Version 5 has been rewritten with performance as a key feature by including a built in request caching (disabled on tests). 
+Passenger is aimed to easy configuration and integration. It comes with a built in request caching (disabled on tests).  
 Passenger supports both the pre-forking and threads-pool models, the latter is only available for the commercial version (not tested). 
 
 #### Bootstrap:
@@ -85,7 +81,8 @@ bundle exec passenger start -p 9292 --disable-turbocaching --min-instances 8
 ```
 
 ### Unicorn
-[Unicorn](http://unicorn.bogomips.org/) is an application server that takes advantage of the Ruby processing programming to elegantly delegate most of the load balancing to the underlaying operating system.
+[Unicorn](http://unicorn.bogomips.org/) is an application server using the pre-forking processes model to elegantly delegate most of the load balancing to the underlaying operating system.  
+It has been proved to be a reliable deployment option for large Rails application (e.g. Github).
 
 #### Bootstrap:
 ```
@@ -122,12 +119,12 @@ Here are the benchmarks results ordered by increasing throughput.
 ### Speed
 Puma outperforms other servers by a large measure: adopting both pre-forking and threads-pool models proved to be a win-win.  
 Passenger was simply not able to perform on par with Puma for light computational requests, but is on the same league for heavy-computational ones.  
-Unicorn delivers the same performance for both light and heavy computational requests: the performance are not stellar, but quite consistent, making it a good option for deploying heavyweight (Rails) applications.  
-Thin reactor-model performance are far away from Puma for both light and heavy computational requests.  
+Unicorn performance are not stellar, but quite consistent: the throughput remains constant for both light and heavy computational requests.
+Thin reactor-model performance proves to be pretty solid for light computations also by using a single worker. On heavy computational requests Thin simply cannot keep the pace of Passenger or Puma (but comparison is unfair here).
 
 ### Reliability
-All the Web servers proved to be pretty reliable, but for Thin, that crashed once under heavy computational requests loading.  
-Passenger has the best latency of the pack.
+All the Web servers proved to be pretty reliable, but for Thin, that crashed once under heavy computational requests loading; again this is understandable since Thin just spawn a single worker.  
+Passenger recorded the best latency of the pack for both light and heavy computational requests.
 
 ### Dependencies
 All of the application servers, but for Unicorn, depends on the Rack gem.  
