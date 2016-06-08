@@ -24,7 +24,7 @@ The scope of this comparison is to figure out how modern Ruby application server
 
 ### Primes
 The Ruby application computes the sum of a range of prime numbers, fetched by the *Prime* standard library.  
-The range of the first prime numbers to compute is configurable via an HTTP parameter to stretch computational time.  
+The range of the first prime numbers to compute is configurable via a HTTP parameter to stretch computational time.  
 
 ### Ruby
 Ruby 2.3 version is used for all of the tests.    
@@ -39,7 +39,7 @@ I registered these benchmarks with a MacBook PRO 15 late 2011 having these specs
 ### Wrk
 I used [wrk](https://github.com/wg/wrk) as the loading tool.
 I measured each application server three times, picking the best lap.  
-The following script commands were used:
+The following script command is used:
 
 ```
 wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/<first_n_primes_to_sum>
@@ -62,8 +62,7 @@ jruby -S bundle exec puma -t 32:64
 ### Thin
 [Thin](http://code.macournoyer.com/thin/) is a piece of software by Marc-André Cournoyer.  
 Thin is the only application server that uses the [reactor-pattern](https://en.wikipedia.org/wiki/Reactor_pattern) to serve HTTP requests, being based on the Ruby [Eventmachine](https://github.com/eventmachine/eventmachine) library.  
-Thin also offers a cluster mode that spawn more servers on separate workers, but
-since each processes use a dedicated socket on a different HTTP port it also demands for an external balancer (i.e. Nginx). For this reason i tested Thin with single worker mode only.
+Thin also offers a cluster mode that spawn more workers by using a dedicated socket; unfortunately cluster mode does not include a load balancer (like Unicorn) and sockets run on a separate port. For this reason i only tested Thin single worker mode.
 
 #### Bootstrap:
 ```
@@ -96,7 +95,7 @@ Roda is a Ruby routing framework that is aimed to simplicity, reliability, exten
 ## Benchmarks
 Here are the benchmarks results ordered by increasing throughput.
 
-### First 10 numbers
+### Light computation (10 numbers)
 | App server     | Throughput (req/s) | Latency in ms (avg/stdev/max) |
 | :------------- | -----------------: | ----------------------------: |
 | Unicorn        |            549.11  |           33.57/16.64/152.81  |
@@ -105,7 +104,7 @@ Here are the benchmarks results ordered by increasing throughput.
 | Puma           |          24260.92  |             5.15/8.25/183.90  |
 | Puma (JRuby)   |          26389.50  |             3.53/8.41/207.55  |
 
-### First 10.000 numbers
+### Heavy computation (10.000 numbers)
 | App server     | Throughput (req/s) | Latency in ms (avg/stdev/max) |
 | :------------- | -----------------: | ----------------------------: |
 | Thin           |            219.47  |           453.85/117.97/1910  |
@@ -120,16 +119,17 @@ Here are the benchmarks results ordered by increasing throughput.
 Puma outperforms other servers by a large measure: adopting both pre-forking and threads-pool models proved to be a win-win.  
 Passenger was simply not able to perform on par with Puma for light computational requests, but is on the same league for heavy-computational ones.  
 Unicorn performance are not stellar, but quite consistent: the throughput remains constant for both light and heavy computational requests.
-Thin reactor-model performance proves to be pretty solid for light computations also by using a single worker. On heavy computational requests Thin simply cannot keep the pace of Passenger or Puma (but comparison is unfair here).
+Thin reactor-model performance proves to be pretty solid for light computations. On heavy computational requests Thin simply cannot keep the pace of Passenger or Puma (but comparison is unfair here, since it runs on a single process).
 
 ### Reliability
-All the Web servers proved to be pretty reliable, but for Thin, that crashed once under heavy computational requests loading; again this is understandable since Thin just spawn a single worker.  
+All the Web servers proved to be pretty reliable, but for Thin, that crashed once under heavy computational requests loading (understandable since it runs on a single process).  
 Passenger recorded the best latency of the pack for both light and heavy computational requests.
 
 ### Dependencies
 All of the application servers, but for Unicorn, depends on the Rack gem.  
 Puma and Passenger have no other runtime dependencies.  
-Unicorn and Thin depends on other two gems, in particular Thin is coupled with the heavyweight Eventmachine gem.
+Unicorn and Thin depends on other two gems.  
+As said Thin also need to be coupled with an external balancer (i.e. Nginx) to support clustering.
 
 ### Configuration
 Passenger could run in production without any particular changes. Integration with both Nginx and Apache is a breeze thanks to the wizard installation.    
@@ -139,7 +139,7 @@ Unicorn configuration is the more *hardcore* of the bucket.
 ### Threads vs processes vs reactor
 I was able to squeeze some throughput from Puma by using JRuby and its threads-pool model.   
 Said that the performance gap of the pre-forking model is not so large on my workstation and JVM consumes much more memory than MRI processes.
-Reactor pattern has proven to not perform nicely on Ruby compared with faster languages, for example [Node.js](https://nodejs.org/en/).
+I cannot judge Thin and the reactor pattern fairly, since i only tested it with one worker. Anyway i would not recommend Thin if you need an embeddable Ruby server (i will go with Puma everyday).
 
 ### The future
 By supporting [CoW](https://en.wikipedia.org/wiki/Copy-on-write) Ruby application servers based the pre-forking model have finally pretty decent performance.  
