@@ -9,7 +9,6 @@
 * [Benchmarks](#benchmarks)
   * [Platform](#platform)
   * [Wrk](#wrk)
-    * [No keep-alive](#no-keep-alive)
   * [Numbers](#numbers)
 * [Considerations](#considerations)
   * [Speed](#speed)
@@ -41,8 +40,8 @@ Puma offers the threads-pool and the pre-forking models to grant parallelism on 
 
 #### Bootstrap:
 ```
-bundle exec puma -w 8 --preload -t 16:32
-jruby --server -S bundle exec puma -t 16:32
+bundle exec puma -w 7 --preload
+jruby --server -S bundle exec puma
 ```
 
 ### Passenger
@@ -81,24 +80,16 @@ The following script command is used:
 wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/?count=1000
 ```
 
-#### No keep-alive
-In order to do a fair comparison i benchmarked also by disabling HTTP keep-alive.  
-This is required since Unicorn simply does not support it.
-
-```
-wrk -H "Connection: Close" -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/?count=1000
-```
-
 ### Memory
 I measured memory peak consumption by using Xcode's Instruments.
 
 ### First 1000 numbers
-| App server     | Throughput (req/s)   | Latency in ms (avg/stdev/max) | No keep-alive (req/s) |    RAM peak (MB) |
-| :------------- | -------------------: | ----------------------------: | --------------------: | ---------------: |
-| Unicorn        |              548.71  |           41.66/24.76/207.39  |               548.71  |            ~183  |
-| Passenger      |            10036.23  |              9.95/1.35/36.67  |               548.63  |            ~138  |
-| Puma (MRI)     |            26858.38  |             3.81/4.20/127.64  |               548.55  |            ~280  |
-| Puma (JVM)     |            29059.83  |              1.05/0.56/42.86  |               538.61  |          531.69  |
+| App server     | Throughput (req/s)   | Latency in ms (avg/stdev/max) |    RAM peak (MB) |
+| :------------- | -------------------: | ----------------------------: | ---------------: |
+| Unicorn        |              548.71  |           41.66/24.76/207.39  |            ~183  |
+| Passenger      |            10036.23  |              9.95/1.35/36.67  |            ~138  |
+| Puma (MRI)     |            27442.68  |              3.43/1.82/73.06  |            ~226  |
+| Puma (JVM)     |            30372.77  |               0.51/0.11/9.83  |          531.69  |
 
 ## Considerations
 
@@ -106,7 +97,7 @@ I measured memory peak consumption by using Xcode's Instruments.
 No crash was registered during the benchmarks.  
 When HTTP pipe-lining is enabled Puma outperforms other application servers by a large margin.  
 Passenger was simply not able to perform on par with Puma, although it offers better latency.  
-As expected all of the application servers are in the same league when keep-alive is disabled.
+Unicorn seems to not support HTTP keep alive option in standalone mode: that's why its throughput is so disappointing.
 
 ### Memory
 Memory consumption seems to be inversely proportional to throughput: Passenger and Unicorn are the less memory-hungry application servers, followed by Puma MRI and, with a large gap, Puma JVM.
