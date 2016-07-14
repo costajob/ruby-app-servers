@@ -13,10 +13,10 @@
   * [Numbers](#numbers)
 * [Considerations](#considerations)
   * [Speed](#speed)
+  * [Memory](#memory)
   * [Dependencies](#dependencies)
   * [Configuration](#configuration)
   * [Threads vs processes](#threads-vs-processes)
-  * [The future](#the-future)
 
 ## Scope
 The scope of this comparison is to figure out how modern Ruby application servers perform against a simple [Rack](http://rack.github.io/) application.
@@ -82,8 +82,8 @@ wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/?count=1000
 ```
 
 #### No keep-alive
-In order to do a fair comparison i benchmarked also by disabling HTTP keep-alive: 
-This is required since Unicorn seems to not support it.
+In order to do a fair comparison i benchmarked also by disabling HTTP keep-alive.  
+This is required since Unicorn simply does not support it.
 
 ```
 wrk -H "Connection: Close" -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/?count=1000
@@ -97,8 +97,8 @@ I measured memory peak consumption by using Xcode's Instruments.
 | :------------- | -------------------: | ----------------------------: | --------------------: | ---------------: |
 | Unicorn        |              548.71  |           41.66/24.76/207.39  |               548.71  |            ~183  |
 | Passenger      |            10036.23  |              9.95/1.35/36.67  |               548.63  |            ~138  |
-| Puma           |            26858.38  |             3.81/4.20/127.64  |               548.55  |            ~280  |
-| Puma (JRuby)   |            29059.83  |              1.05/0.56/42.86  |               538.61  |          531.69  |
+| Puma (MRI)     |            26858.38  |             3.81/4.20/127.64  |               548.55  |            ~280  |
+| Puma (JVM)     |            29059.83  |              1.05/0.56/42.86  |               538.61  |          531.69  |
 
 ## Considerations
 
@@ -107,6 +107,9 @@ No crash was registered during the benchmarks.
 When HTTP pipe-lining is enabled Puma outperforms other application servers by a large margin.  
 Passenger was simply not able to perform on par with Puma, although it offers better latency.  
 As expected all of the application servers are in the same league when keep-alive is disabled.
+
+### Memory
+Memory consumption seems to be inversely proportional to throughput: Unicorn is the less memory-hungry application server, followed by Passenger, Puma MRI and, with a large margin, Puma JVM.
 
 ### Dependencies
 All of the application servers, but for Unicorn, depends on the Rack gem.  
@@ -118,9 +121,5 @@ Passenger provides commands to start and stop the server, while Puma relies on a
 Unicorn configuration is the more *hardcore* of the bucket: it explicitly demands for a configuration file, while the rest of the pack can be configured directly by command line.
 
 ### Threads vs processes
-JRuby with Puma proved to be the fastest of the tested solutions, although MRI implementation is also very close in throughput.  
-JRuby latency is also better than MRI, but JVM consumes much more memory than MRI processes.
-
-### The future
-By supporting [CoW](https://en.wikipedia.org/wiki/Copy-on-write) Ruby application servers based the pre-forking model have finally pretty decent performance.  
-*Ruby 3.0* will be aimed to be 3x faster and to offer a better concurrency model: that's great, since JRuby proved how threads-pool model outperforms pre-forking one on both throughput and latency.
+Puma on JVM proved to be the fastest of the tested solutions, although MRI implementation is also very close in throughput.  
+JRuby latency is also better than MRI, despite JVM confirmed to be a memory-hungry piece of software.
