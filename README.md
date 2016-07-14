@@ -71,6 +71,8 @@ I registered these benchmarks with a MacBook PRO 15 late 2011 having these specs
 * 2,2 GHz Intel Core i7 (4 cores)
 * 8 GB 1333 MHz DDR3
 
+I measured memory peak consumption by using Xcode's Instruments.
+
 ### Wrk
 I used [wrk](https://github.com/wg/wrk) as the loading tool.
 I measured each application server three times, picking the best lap.  
@@ -79,9 +81,6 @@ The following script command is used:
 ```
 wrk -t 4 -c 100 -d 30s --timeout 2000 http://127.0.0.1:9292/?count=1000
 ```
-
-### Memory
-I measured memory peak consumption by using Xcode's Instruments.
 
 ### First 1000 numbers
 | App server     | Throughput (req/s)   | Latency in ms (avg/stdev/max) |    RAM peak (MB) |
