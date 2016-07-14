@@ -109,7 +109,7 @@ Passenger was simply not able to perform on par with Puma, although it offers be
 As expected all of the application servers are in the same league when keep-alive is disabled.
 
 ### Memory
-Memory consumption seems to be inversely proportional to throughput: Unicorn is the less memory-hungry application server, followed by Passenger, Puma MRI and, with a large margin, Puma JVM.
+Memory consumption seems to be inversely proportional to throughput: Passenger and Unicorn are the less memory-hungry application servers, followed by Puma MRI and, with a large gap, Puma JVM.
 
 ### Dependencies
 All of the application servers, but for Unicorn, depends on the Rack gem.  
