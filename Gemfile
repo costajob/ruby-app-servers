@@ -1,12 +1,11 @@
 # A sample Gemfile
 source 'https://rubygems.org'
 
-gem 'roda'
+gem 'rack'
 gem 'puma'
-gem 'passenger'
-gem 'thin'
-gem 'unicorn'
 
-group :test do
-  gem 'minitest'
+if RUBY_PLATFORM != "java"
+  gem 'passenger'
+  gem 'thin'
+  gem 'unicorn'
 end

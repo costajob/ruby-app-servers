@@ -1,4 +1,4 @@
 $LOAD_PATH.unshift(File.expand_path('../lib', __FILE__))
-require 'api/roda'
+require 'app'
 
-run Api::RodaApp.freeze.app
+run App.freeze
